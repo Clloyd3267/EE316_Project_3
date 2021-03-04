@@ -17,7 +17,7 @@ create_clock -add -name sys_clk_pin -period 8.00 -waveform {0 4} [get_ports { I_
 
 ### Buttons
 set_property -dict { PACKAGE_PIN D20   IOSTANDARD LVCMOS33 } [get_ports { I_RESET }]; #IO_L4N_T0_35 Sch=btn[0]
-set_property -dict { PACKAGE_PIN D19   IOSTANDARD LVCMOS33 } [get_ports { I_BTN_1 }]; #IO_L4P_T0_35 Sch=btn[1]
+# set_property -dict { PACKAGE_PIN D19   IOSTANDARD LVCMOS33 } [get_ports { I_BTN_1 }]; #IO_L4P_T0_35 Sch=btn[1]
 
 ## Pmod Header JA
 #set_property -dict { PACKAGE_PIN Y18   IOSTANDARD LVCMOS33 } [get_ports { I_KEYPAD_ROW_1 }]; #IO_L17P_T2_34 Sch=ja_p[1]
@@ -89,7 +89,7 @@ set_property -dict { PACKAGE_PIN D19   IOSTANDARD LVCMOS33 } [get_ports { I_BTN_
 #set_property -dict { PACKAGE_PIN A20   IOSTANDARD LVCMOS33 } [get_ports { ck_a11 }]; #IO_L2N_T0_AD8N_35 Sch=ad_n[8]
 
 ## ChipKit Outer Digital Header
-# set_property -dict { PACKAGE_PIN U14   IOSTANDARD LVCMOS33 } [get_ports { IO_I2C_SCL }]; #IO_L11P_T1_SRCC_34 Sch=ck_io[0]
+set_property -dict { PACKAGE_PIN U14   IOSTANDARD LVCMOS33 } [get_ports { O_PULSE_WAVE }]; #IO_L11P_T1_SRCC_34 Sch=ck_io[0]
 # set_property -dict { PACKAGE_PIN V13   IOSTANDARD LVCMOS33 } [get_ports { IO_I2C_SDA }]; #IO_L3N_T0_DQS_34 Sch=ck_io[1]
 #set_property -dict { PACKAGE_PIN T14   IOSTANDARD LVCMOS33 } [get_ports { I_KEYPAD_ROW_3 }]; #IO_L5P_T0_34 Sch=ck_io[2]
 #set_property -dict { PACKAGE_PIN T15   IOSTANDARD LVCMOS33 } [get_ports { I_KEYPAD_ROW_4 }]; #IO_L5N_T0_34 Sch=ck_io[3]

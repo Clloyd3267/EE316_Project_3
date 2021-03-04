@@ -32,10 +32,8 @@ port
   I_RESET_N      : in std_logic;                      -- System reset (active low)
 
   I_ADC_ENABLE   : in std_logic;                      -- Whether the adc is enabled
-
-  I_ADC_CH_NUM   : in std_logic(1 downto 0);          -- CDL=> Here
-
-  O_DAC_DATA     : out std_logic_vector(7 downto 0);  -- Data from A/D conversion
+  I_ADC_CH_NUM   : in std_logic(1 downto 0);          -- The ADC channel number to use
+  O_ADC_DATA     : out std_logic_vector(7 downto 0);  -- Data from A/D conversion
 
   IO_I2C_SDA     : inout std_logic;                   -- Serial data of i2c bus
   IO_I2C_SCL     : inout std_logic                    -- Serial clock of i2c bus
@@ -99,6 +97,9 @@ architecture behavioral of adc_i2c_driver is
   signal s_adc_ch_num_prev      : std_logic_vector(1 downto 0);
 
 begin
+  ------------------------------
+  -- Component Instantiations --
+  ------------------------------
 
   -- I2C controller for ADC
   I2C_MASTER_INST:i2c_master
@@ -219,6 +220,6 @@ begin
   ------------------------------------------------------------------------------
 
   s_wr_data_byte <= "000000" & I_ADC_CH_NUM;  -- Write data to I2C master (always control byte)
-  O_DAC_DATA     <= s_rw_data_byte;           -- Read data (always output ADC data)
+  O_ADC_DATA     <= s_rw_data_byte;           -- Read data (always output ADC data)
 
 end architecture behavioral;
