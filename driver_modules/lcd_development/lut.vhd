@@ -1,9 +1,9 @@
 --------------------------------------------------------------------------------
 -- Filename     : lcd_lut.vhd
--- Author(s)    : Chris Lloyd
--- Class        : EE316 (Project 2)
--- Due Date     : 2021-02-23
--- Target Board : Altera DE2 Devkit
+-- Author(s)    : Chris Lloyd, Thomas Griebel
+-- Class        : EE316 (Project 3)
+-- Due Date     : 2021-03-11
+-- Target Board : Cora z7
 -- Entity       : lcd_lut
 -- Description  : A lookup table (lut) to decide what data (O_LCD_DATA) gets
 --                displayed to the LCD module depending on the current mode
