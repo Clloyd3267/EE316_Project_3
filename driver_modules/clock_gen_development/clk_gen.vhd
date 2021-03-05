@@ -8,10 +8,9 @@ use IEEE.MATH_REAL.ALL;
 
 entity clk_gen is
     port(sys_clk : in std_logic;
-         enable_btn : in std_logic;
+         enable : in std_logic;
          desired_clk : in std_logic_vector(7 downto 0);
-         output_clk : out std_logic;
-         led_0 : out std_logic);
+         output_clk : out std_logic);
 end clk_gen;
 
 architecture Behavioral of clk_gen is
@@ -19,7 +18,7 @@ signal counter : std_logic_vector(16 downto 0) := '0'&X"0000";
 signal variable_counter : std_logic_vector(16 downto 0) := '0'&X"0000";
 signal temp_output_clk : std_logic := '1';
 signal enable_btn_prev: std_logic;
-signal enable : std_logic := '1';
+-- signal enable : std_logic := '1';
 
 signal converted_desired_clk : std_logic_vector(16 downto 0) := '0'&X"0000";
 constant desired_clk_min: natural := 0;
@@ -35,10 +34,10 @@ begin
 CLKGEN : process(sys_clk, enable)
 begin
     if(enable = '0') then
-        led_0 <= '0';
+        -- led_0 <= '0';
         output_clk <= '0';
     elsif(rising_edge(sys_clk)) then
-        led_0 <= '1';
+        -- led_0 <= '1';
         counter <= counter + '1';
         if(counter = variable_counter) then
             variable_counter <= variable_counter + converted_desired_clk;
@@ -57,14 +56,14 @@ begin
     end if;
 end process CONVERSION;
 
-BTN_EN: process(sys_clk)
-begin
-    if(rising_edge(sys_clk)) then
-        enable_btn_prev <= enable_btn;
-        if(enable_btn_prev = '1' and enable_btn = '0') then
-            enable <= not enable;
-        end if;
-    end if;
-end process BTN_EN;
-    
+-- BTN_EN: process(sys_clk)
+-- begin
+--     if(rising_edge(sys_clk)) then
+--         enable_btn_prev <= enable_btn;
+--         if(enable_btn_prev = '1' and enable_btn = '0') then
+--             enable <= not enable;
+--         end if;
+--     end if;
+-- end process BTN_EN;
+
 end Behavioral;

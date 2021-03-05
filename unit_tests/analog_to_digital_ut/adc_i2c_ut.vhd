@@ -59,6 +59,15 @@ architecture behavioral of adc_i2c_ut is
   );
   end component adc_i2c_driver;
 
+  component clk_gen is
+  port
+  (
+    sys_clk     : in std_logic;
+    enable      : in std_logic;
+    desired_clk : in std_logic_vector(7 downto 0);
+    output_clk  : out std_logic
+  );
+  end component clk_gen;
   ---------------
   -- Constants --
   ---------------
@@ -80,6 +89,8 @@ architecture behavioral of adc_i2c_ut is
   signal s_adc_enable     : std_logic;                     -- Enable signal for ADC module
   signal s_adc_ch_num     : std_logic_vector(1 downto 0);  -- Channel number for ADC module
   signal s_adc_data       : std_logic_vector(7 downto 0);  -- Data from ADC
+
+  signal s_clk_enable     : std_logic;                     -- Enable signal for clk gen module
 
 begin
   ------------------------------
@@ -105,8 +116,19 @@ begin
     IO_I2C_SCL     => IO_I2C_SCL
   );
 
-  I_ADC_ENABLE <= '1';          -- ADC always enabled
+  -- Device driver for clock pulse generator
+  CLOCK_GEN_INST: clk_gen
+  port
+  (
+    sys_clk     => I_CLK_125_MHZ,
+    enable      => s_clk_enable,
+    desired_clk => s_adc_data,
+    output_clk  => O_PULSE_WAVE
+  );
+
+  s_adc_enable <= '1';          -- ADC always enabled
   s_adc_ch_num <= C_ADC_CH_3;   -- ADC channel selection to get data
+  s_clk_enable <= '1';          -- CLK gen always enabled
 
   s_reset_n    <= not I_RESET;  -- Active low reset logic
 
