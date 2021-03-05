@@ -2,7 +2,7 @@
 -- Filename     : adc_i2c_ut.vhd
 -- Author(s)    : Chris Lloyd, Thomas Griebel, Anthony Seybolt
 -- Class        : EE316 (Project 3)
--- Due Date     : 2021-02-23
+-- Due Date     : 2021-03-11
 -- Target Board : Cora 7Z010
 -- Entity       : adc_i2c_ut
 -- Description  : Unit Test (ut) to test I2C ADC interface using clock pulse
