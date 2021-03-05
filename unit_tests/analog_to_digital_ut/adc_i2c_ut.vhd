@@ -51,7 +51,7 @@ architecture behavioral of adc_i2c_ut is
     I_RESET_N      : in std_logic;                      -- System reset (active low)
 
     I_ADC_ENABLE   : in std_logic;                      -- Whether the adc is enabled
-    I_ADC_CH_NUM   : in std_logic(1 downto 0);          -- The ADC channel number to use
+    I_ADC_CH_NUM   : in std_logic_vector(1 downto 0);   -- The ADC channel number to use
     O_ADC_DATA     : out std_logic_vector(7 downto 0);  -- Data from A/D conversion
 
     IO_I2C_SDA     : inout std_logic;                   -- Serial data of i2c bus
@@ -118,7 +118,7 @@ begin
 
   -- Device driver for clock pulse generator
   CLOCK_GEN_INST: clk_gen
-  port
+  port map
   (
     sys_clk     => I_CLK_125_MHZ,
     enable      => s_clk_enable,

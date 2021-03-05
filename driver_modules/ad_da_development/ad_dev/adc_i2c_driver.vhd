@@ -32,7 +32,7 @@ port
   I_RESET_N      : in std_logic;                      -- System reset (active low)
 
   I_ADC_ENABLE   : in std_logic;                      -- Whether the adc is enabled
-  I_ADC_CH_NUM   : in std_logic(1 downto 0);          -- The ADC channel number to use
+  I_ADC_CH_NUM   : in std_logic_vector(1 downto 0);   -- The ADC channel number to use
   O_ADC_DATA     : out std_logic_vector(7 downto 0);  -- Data from A/D conversion
 
   IO_I2C_SDA     : inout std_logic;                   -- Serial data of i2c bus
@@ -77,7 +77,7 @@ architecture behavioral of adc_i2c_driver is
   constant C_CLK_FREQ_HZ         : integer := C_CLK_FREQ_MHZ * 1_000_000;
   constant C_I2C_BUS_CLK_FREQ_HZ : integer := 100_000;
 
-  constant C_I2C_ADC_ADDR        : std_logic_vector(6 downto 0) := x"24";  -- CDL=> May need to be "0x48"
+  constant C_I2C_ADC_ADDR        : std_logic_vector(7 downto 0) := x"48";  -- CDL=> May need to be "0x48"
 
   -------------
   -- SIGNALS --
@@ -88,7 +88,7 @@ architecture behavioral of adc_i2c_driver is
   signal s_i2c_curr_state       : T_DAC_STATE := WAIT_STATE;
 
   signal s_i2c_enable           : std_logic;
-  signal s_i2c_address          : std_logic_vector(6 downto 0) := C_I2C_ADC_ADDR;
+  signal s_i2c_address          : std_logic_vector(6 downto 0) := C_I2C_ADC_ADDR(6 downto 0);
   signal s_i2c_rw               : std_logic;  --'0' is write, '1' is read
   signal s_wr_data_byte         : std_logic_vector(7 downto 0);
   signal s_rw_data_byte         : std_logic_vector(7 downto 0);
@@ -141,24 +141,24 @@ begin
 
     elsif (rising_edge(I_CLK)) then
       if (I_ADC_ENABLE = '0') then
-        s_i2c_curr_state       <= WAIT_STATE
+        s_i2c_curr_state       <= WAIT_STATE;
       else
         -- I2C state machine logic
         case s_i2c_curr_state is
           -- Transition state to wait for I2C to be no longer busy
           when WAIT_STATE =>
             if (s_i2c_busy = '0') then
-              s_i2c_curr_state <= WRITE_CONTROL_STATE
+              s_i2c_curr_state <= WRITE_CONTROL_STATE;
             else
-              s_i2c_curr_state <= WAIT_STATE
+              s_i2c_curr_state <= WAIT_STATE;
             end if;
 
           -- Write the control byte indicating what channel to use
           when WRITE_CONTROL_STATE =>
           if ((s_i2c_busy_prev = '0') and (s_i2c_busy = '1')) then
-            s_i2c_curr_state   <= READ_ANALOG_STATE
+            s_i2c_curr_state   <= READ_ANALOG_STATE;
           else
-            s_i2c_curr_state   <= WRITE_CONTROL_STATE
+            s_i2c_curr_state   <= WRITE_CONTROL_STATE;
           end if;
 
           -- Contiously read values from the ADC until a new channel is selected
@@ -206,7 +206,7 @@ begin
       if (s_i2c_curr_state /= WAIT_STATE) then
         s_i2c_enable    <= '1';
       else
-        s_7sd_enable    <= '0';
+        s_i2c_enable    <= '0';
       end if;
 
       -- Read / Write logic
