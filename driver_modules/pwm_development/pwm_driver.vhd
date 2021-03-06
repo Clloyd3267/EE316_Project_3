@@ -73,7 +73,7 @@ begin
         end if;
 
         -- Output PWM signal
-        if (v_pwm_count < to_integer(unsigned(I_PWM_DATA)) then
+        if (v_pwm_count < to_integer(unsigned(I_PWM_DATA))) then
           O_PWM       <= '1';
         else
           O_PWM       <= '0';

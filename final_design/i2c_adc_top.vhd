@@ -46,7 +46,7 @@ end entity i2c_adc_top;
 --------------------------------
 --  Architecture Declaration  --
 --------------------------------
-architecture behavioral of adc_i2c_ut is
+architecture behavioral of i2c_adc_top is
 
   ----------------
   -- Components --
@@ -144,6 +144,9 @@ architecture behavioral of adc_i2c_ut is
 
   signal s_led_0            : std_logic_vector(2 downto 0);  -- LED0
   signal s_led_1            : std_logic_vector(2 downto 0);  -- LED1
+
+  signal s_btn_0_prev       : std_logic;
+  signal s_btn_1_prev       : std_logic;
 
 begin
   ------------------------------
