@@ -33,9 +33,10 @@ port
   -- 3 : LED1B
   -- 4 : LED1G
   -- 5 : LED1R
-  O_KEYPAD_RGB_BINARY : out std_logic_vector(5 downto 0);
+  O_RGB_LEDS : out std_logic_vector(5 downto 0);
 
   O_PULSE_WAVE        : out std_logic;    -- Clock pulse from waveform gen
+  O_PWM_WAVE          : out std_logic;    -- PWM pulse from pwm gen
 
   IO_I2C_SDA          : inout std_logic;  -- Serial data of i2c bus
   IO_I2C_SCL          : inout std_logic   -- Serial clock of i2c bus
@@ -79,8 +80,24 @@ architecture behavioral of adc_i2c_ut is
   );
   end component clk_gen;
 
+  component pwm_driver is
+  generic
+  (
+    C_CLK_FREQ_MHZ : integer := 125                     -- System clock frequency in MHz
+  );
+  port
+  (
+    I_CLK          : in std_logic;                      -- System clk frequency of (C_CLK_FREQ_MHZ)
+    I_RESET_N      : in std_logic;                      -- System reset (active low)
+
+    I_PWM_ENABLE   : in std_logic;                      -- Output enable for the module
+    I_PWM_DATA     : in std_logic_vector(7 downto 0);   -- Input data to create duty cycle
+
+    O_PWM          : out std_logic                      -- Output PWM waveform
+  );
+  end component pwm_driver;
+
   --CDL=> Add LCD components
-  --CDL=> Add PWM components
   --CDL=> Add DAC components
 
   ---------------
@@ -101,6 +118,11 @@ architecture behavioral of adc_i2c_ut is
   constant C_OUT_DAC        : std_logic_vector(1 downto 0) := "10";
   constant C_OUT_DISABLED   : std_logic_vector(1 downto 0) := "11";  -- CDL=> Remove later
 
+  constant C_LED_BLUE     : std_logic_vector(2 downto 0) := "001";
+  constant C_LED_GREEN    : std_logic_vector(2 downto 0) := "010";
+  constant C_LED_RED      : std_logic_vector(2 downto 0) := "100";
+  constant C_LED_OFF      : std_logic_vector(2 downto 0) := "000";
+
   -- Inital System reset time in ms
   constant C_RESET_TIME_MS  : integer := 25;
 
@@ -119,6 +141,9 @@ architecture behavioral of adc_i2c_ut is
   signal s_dac_enable       : std_logic;                     -- Enable signal for DAC gen module
 
   signal s_output_mode      : std_logic_vector(1 downto 0);  -- Data output mode
+
+  signal s_led_0            : std_logic_vector(2 downto 0);  -- LED0
+  signal s_led_1            : std_logic_vector(2 downto 0);  -- LED1
 
 begin
   ------------------------------
@@ -154,8 +179,22 @@ begin
     output_clk  => O_PULSE_WAVE
   );
 
+  -- Device driver for PWM generator
+  PWM_GEN_INST: pwm_driver
+  generic map
+  (
+    C_CLK_FREQ_MHZ => C_CLK_FREQ_MHZ
+  )
+  port map
+  (
+    I_CLK          => I_CLK_125_MHZ,
+    I_RESET_N      => s_reset_n,
+    I_PWM_ENABLE   => s_pwm_enable,
+    I_PWM_DATA     => s_adc_data,
+    O_PWM          => O_PWM_WAVE
+  );
+
   --CDL=> Add LCD component instantions
-  --CDL=> Add PWM component instantions
   --CDL=> Add DAC component instantions
 
   ---------------
@@ -197,8 +236,8 @@ begin
   INOUT_MODE_CONTROL: process (I_CLK_125_MHZ)
   begin
     if (s_reset_n = '0') then
-      s_adc_ch_num        <= C_ADC_CH_0;
-      s_output_mode       <= C_OUT_DISABLED;
+      s_adc_ch_num        <= C_ADC_CH_3;  -- CDL=> Change default values
+      s_output_mode       <= C_OUT_CLK;   -- CDL=> Change default values
       s_btn_0_prev        <= '0';
       s_btn_1_prev        <= '0';
 
@@ -261,6 +300,8 @@ begin
       s_pwm_enable   <= '0';
       s_clk_enable   <= '0';
       s_dac_enable   <= '0';
+      s_led_0        <= C_LED_OFF;
+      s_led_1        <= C_LED_OFF;
 
 
     elsif (rising_edge(I_CLK_125_MHZ)) then
@@ -286,22 +327,38 @@ begin
         s_dac_enable <= '0';
       end if;
 
-      -- -- Output LED control -- CDL=> Implement LEDs as status outputs
-      -- case (s_output_mode) is
-      --   when C_OUT_PWM =>
-      --     O_KEYPAD_RGB_BINARY <= "";
-      --   when C_OUT_CLK =>
-      --     O_KEYPAD_RGB_BINARY <= "";
-      --   when C_OUT_DAC =>
-      --     O_KEYPAD_RGB_BINARY <= "";
-      --   when C_OUT_DISABLED =>
-      --     O_KEYPAD_RGB_BINARY <= "";
-      --   when others =>
-      -- end case;
+      -- Input LED control
+      case (s_adc_ch_num) is
+        when C_ADC_CH_0 =>
+          s_led_1 <= C_LED_BLUE;
+        when C_ADC_CH_1 =>
+          s_led_1 <= C_LED_RED;
+        when C_ADC_CH_2 =>
+          s_led_1 <= C_LED_GREEN;
+        when C_ADC_CH_3 =>
+          s_led_1 <= C_LED_OFF;
+        when others =>
+          s_led_1 <= C_LED_OFF;
+      end case;
+
+      -- Output LED control
+      case (s_output_mode) is
+        when C_OUT_PWM =>
+          s_led_0 <= C_LED_BLUE;
+        when C_OUT_CLK =>
+          s_led_0 <= C_LED_RED;
+        when C_OUT_DAC =>
+          s_led_0 <= C_LED_GREEN;
+        when C_OUT_DISABLED =>
+          s_led_0 <= C_LED_OFF;
+        when others =>
+          s_led_0 <= C_LED_OFF;
+      end case;
     end if;
   end process DATA_FLOW_CTRL;
   ------------------------------------------------------------------------------
 
-  s_adc_enable <= '1';          -- ADC always enabled
+  s_adc_enable <= '1';                -- ADC always enabled
+  O_RGB_LEDS   <= s_led_1 & s_led_0;  -- Combine LED outputs
 
 end architecture behavioral;

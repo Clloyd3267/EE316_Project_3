@@ -8,12 +8,12 @@ set_property -dict { PACKAGE_PIN H16   IOSTANDARD LVCMOS33 } [get_ports { I_CLK_
 create_clock -add -name sys_clk_pin -period 8.00 -waveform {0 4} [get_ports { I_CLK_125_MHZ }];#set
 
 ## RGB LEDs
-set_property -dict { PACKAGE_PIN L15   IOSTANDARD LVCMOS33 } [get_ports { O_KEYPAD_RGB_BINARY[0] }]; # Blue0
-set_property -dict { PACKAGE_PIN G17   IOSTANDARD LVCMOS33 } [get_ports { O_KEYPAD_RGB_BINARY[1] }]; # Green0
-set_property -dict { PACKAGE_PIN N15   IOSTANDARD LVCMOS33 } [get_ports { O_KEYPAD_RGB_BINARY[2] }]; # Red0
-set_property -dict { PACKAGE_PIN G14   IOSTANDARD LVCMOS33 } [get_ports { O_KEYPAD_RGB_BINARY[3] }]; # Blue1
-set_property -dict { PACKAGE_PIN L14   IOSTANDARD LVCMOS33 } [get_ports { O_KEYPAD_RGB_BINARY[4] }]; # Green1
-set_property -dict { PACKAGE_PIN M15   IOSTANDARD LVCMOS33 } [get_ports { O_KEYPAD_RGB_BINARY[5] }]; # Red1
+set_property -dict { PACKAGE_PIN L15   IOSTANDARD LVCMOS33 } [get_ports { O_RGB_LEDS[0] }]; # Blue0
+set_property -dict { PACKAGE_PIN G17   IOSTANDARD LVCMOS33 } [get_ports { O_RGB_LEDS[1] }]; # Green0
+set_property -dict { PACKAGE_PIN N15   IOSTANDARD LVCMOS33 } [get_ports { O_RGB_LEDS[2] }]; # Red0
+set_property -dict { PACKAGE_PIN G14   IOSTANDARD LVCMOS33 } [get_ports { O_RGB_LEDS[3] }]; # Blue1
+set_property -dict { PACKAGE_PIN L14   IOSTANDARD LVCMOS33 } [get_ports { O_RGB_LEDS[4] }]; # Green1
+set_property -dict { PACKAGE_PIN M15   IOSTANDARD LVCMOS33 } [get_ports { O_RGB_LEDS[5] }]; # Red1
 
 ### Buttons
 set_property -dict { PACKAGE_PIN D20   IOSTANDARD LVCMOS33 } [get_ports { I_BTN_0 }]; #IO_L4N_T0_35 Sch=btn[0]
@@ -90,7 +90,7 @@ set_property -dict { PACKAGE_PIN D19   IOSTANDARD LVCMOS33 } [get_ports { I_BTN_
 
 ## ChipKit Outer Digital Header
 set_property -dict { PACKAGE_PIN U14   IOSTANDARD LVCMOS33 } [get_ports { O_PULSE_WAVE }]; #IO_L11P_T1_SRCC_34 Sch=ck_io[0]
-# set_property -dict { PACKAGE_PIN V13   IOSTANDARD LVCMOS33 } [get_ports { IO_I2C_SDA }]; #IO_L3N_T0_DQS_34 Sch=ck_io[1]
+set_property -dict { PACKAGE_PIN V13   IOSTANDARD LVCMOS33 } [get_ports { O_PWM_WAVE }]; #IO_L3N_T0_DQS_34 Sch=ck_io[1]
 #set_property -dict { PACKAGE_PIN T14   IOSTANDARD LVCMOS33 } [get_ports { I_KEYPAD_ROW_3 }]; #IO_L5P_T0_34 Sch=ck_io[2]
 #set_property -dict { PACKAGE_PIN T15   IOSTANDARD LVCMOS33 } [get_ports { I_KEYPAD_ROW_4 }]; #IO_L5N_T0_34 Sch=ck_io[3]
 #set_property -dict { PACKAGE_PIN V17   IOSTANDARD LVCMOS33 } [get_ports { O_KEYPAD_COL_1 }]; #IO_L21P_T3_DQS_34 Sch=ck_io[4]
