@@ -1,9 +1,9 @@
 --------------------------------------------------------------------------------
 -- Filename     : lcd_lut.vhd
--- Author(s)    : Chris Lloyd, Thomas Griebel
--- Class        : EE316 (Project 3)
--- Due Date     : 2021-03-11
--- Target Board : Cora z7
+-- Author(s)    : Chris Lloyd
+-- Class        : EE316 (Project 2)
+-- Due Date     : 2021-02-23
+-- Target Board : Altera DE2 Devkit
 -- Entity       : lcd_lut
 -- Description  : A lookup table (lut) to decide what data (O_LCD_DATA) gets
 --                displayed to the LCD module depending on the current mode
@@ -14,16 +14,24 @@
 --  Libraries  --
 -----------------
 library ieee;
-  use ieee.std_logic_1164.all;
-  use ieee.numeric_std.all;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+package lcd_screen_util is
+type t_lcd_display_data is array (31 downto 0) of std_logic_vector(7 downto 0);
+end package lcd_screen_util;
+
+  
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 library work;
   use work.lcd_screen_util.all;
-
 --------------
 --  Entity  --
 --------------
-entity lcd_lut is
+entity lut is
 generic
 (
   C_CLK_FREQ_MHZ : integer := 50  -- System clock frequency in MHz
@@ -31,32 +39,23 @@ generic
 port
 (
   I_CLK          : in std_logic;  -- System clk frequency of (C_CLK_FREQ_MHZ)
-  I_RESET_N      : in std_logic;  -- System reset (active low)
+  I_RESET_N      : in std_logic := '1';  -- System reset (active low)
 
   -- Mode of operation
-  I_MODE         : in std_logic_vector(1 downto 0);
+  I_MODE         : in std_logic_vector(1 downto 0) := "00";
   
   -- Clock Generation En
-  CLK_GEN_EN	 : in std_logic;
-
-  -- Output Frequency
-  I_PWM_FREQ     : in std_logic_vector(1 downto 0);
-
-  -- 16-bit Data (4 hex nibbles)
-  I_DATA         : in std_logic_vector(15 downto 0);
-
-  -- 8-bit Address (2 hex nibbles)
-  I_ADDRESS      : in std_logic_vector(7 downto 0);
+  CLK_GEN_EN	 : in std_logic := '1';
 
   -- Output LCD "screen" array type (see lcd_display_driver.vhd:19 for type def)
   O_LCD_DATA     : out t_lcd_display_data
 );
-end entity lcd_lut;
+end entity lut;
 
 --------------------------------
 --  Architecture Declaration  --
 --------------------------------
-architecture behavioral of lcd_lut is
+architecture behavioral of lut is
 
   ---------------
   -- Constants --
@@ -153,13 +152,13 @@ architecture behavioral of lcd_lut is
   -------------
   -- SIGNALS --
   -------------
-  type t_lcd_addr_ascii is array (1 downto 0) of std_logic_vector(7 downto 0);
-  type t_lcd_data_ascii is array (3 downto 0) of std_logic_vector(7 downto 0);
-  type t_lcd_freq_ascii is array (6 downto 0) of std_logic_vector(7 downto 0);
+--  type t_lcd_addr_ascii is array (1 downto 0) of std_logic_vector(7 downto 0);
+--  type t_lcd_data_ascii is array (3 downto 0) of std_logic_vector(7 downto 0);
+--  type t_lcd_freq_ascii is array (6 downto 0) of std_logic_vector(7 downto 0);
 
-  signal s_addr_ascii : t_lcd_addr_ascii := (others=>(others=>('0')));
-  signal s_data_ascii : t_lcd_data_ascii := (others=>(others=>('0')));
-  signal s_freq_ascii : t_lcd_freq_ascii := (others=>(others=>('0')));
+--  signal s_addr_ascii : t_lcd_addr_ascii := (others=>(others=>('0')));
+--  signal s_data_ascii : t_lcd_data_ascii := (others=>(others=>('0')));
+--  signal s_freq_ascii : t_lcd_freq_ascii := (others=>(others=>('0')));
 
 begin
 
@@ -178,7 +177,7 @@ begin
     elsif (rising_edge(I_CLK)) then
       
 		case(CLK_GEN_EN) is 
-			when "0" =>
+			when '0' =>
 				case(I_MODE) is -- CDL=> Fix Index/explain
 				when MODE_LDR  =>
 				  -- [PWM SRC: LDR]
@@ -220,61 +219,55 @@ begin
 				  O_LCD_DATA <= (others=>(others=>('0')));
 				  
 				end case;  
-			when "1" =>
+			when '1' =>
 				case(I_MODE) is -- CDL=> Fix Index/explain
 				when MODE_LDR  =>
 				  -- [PWM SRC: LDR]
-				  -- [CLK FREQ: XXXXHz]
+				  -- [CLK ENABLED]
 				  O_LCD_DATA <=
 				  (
 					UP, UW, UM, SP, US, UR, UC, CL, SP, UL, UD, UR, SP, SP, SP, SP,
-					UC, UL, UK, SP, UF, UR, UE, UQ, CL, SP, XX, XX, XX, XX, UH, LZ
+					UC, UL, UK, SP, UE, UN, UA, UB, UL, UE, UD, SP, SP, SP, SP, SP
 				  );
 
 				when MODE_TEMP  =>
 				  -- [PWM SRC: TEMP]
-				  -- [CLK FREQ: XXXXHz]
+				  -- [CLK ENABLED]
 				  O_LCD_DATA <=
 				  (
 					UP, UW, UM, SP, US, UR, UC, CL, SP, UT, UE, UM, UP, SP, SP, SP,
-					UC, UL, UK, SP, UF, UR, UE, UQ, CL, SP, XX, XX, XX, XX, UH, LZ
+					UC, UL, UK, SP, UE, UN, UA, UB, UL, UE, UD, SP, SP, SP, SP, SP
 				  );
 
 				 when MODE_ANALOG =>
 				  -- [PWM SRC: ANALOG]
-				  -- [CLK FREQ: XXXXHz]
+				  -- [CLK ENABLED]
 				  O_LCD_DATA <=
 				  (
 					UP, UM, UW, SP, US, UR, UC, CL, SP, UA, UN, UA, UL, UO, UG, SP,
-					UC, UL, UK, SP, UF, UR, UE, UQ, CL, SP, XX, XX, XX, XX, UH, LZ
+					UC, UL, UK, SP, UE, UN, UA, UB, UL, UE, UD, SP, SP, SP, SP, SP
 				  );
 
 				when MODE_POT   =>
 				  -- [PWM SRC: POT]
-				  -- [CLK FREQ: XXXXHz]
+				  -- [CLK ENABLED]
 				  O_LCD_DATA <=
 				  (
 					UP, UW, UM, SP, US, UR, UC, CL, SP, UP, UO, UT, SP, SP, SP, SP,
-					UC, UL, UK, SP, UF, UR, UE, UQ, CL, SP, XX, XX, XX, XX, UH, LZ
+					UC, UL, UK, SP, UE, UN, UA, UB, UL, UE, UD, SP, SP, SP, SP, SP
 				  );
 
 				when others =>
 				  O_LCD_DATA <= (others=>(others=>('0')));
 				  
 				end case;  
+				
+				when others =>
+				     O_LCD_DATA <= (others=>(others=>('0')));
       end case;
     end if;
   end process LCD_LUT_DATA_LATCH;
   ------------------------------------------------------------------------------
-
-  -- First bit of address
-  s_addr_ascii(0) <= x"3" & I_ADDRESS(3 downto 0) when I_ADDRESS(3 downto 0) < x"A"   -- 0-9
-                else x"41"                        when I_ADDRESS(3 downto 0) = x"A"   -- A
-                else x"42"                        when I_ADDRESS(3 downto 0) = x"B"   -- B
-                else x"43"                        when I_ADDRESS(3 downto 0) = x"C"   -- C
-                else x"44"                        when I_ADDRESS(3 downto 0) = x"D"   -- D
-                else x"45"                        when I_ADDRESS(3 downto 0) = x"E"   -- E
-                else x"46"                        when I_ADDRESS(3 downto 0) = x"F";  -- F
 
 
 end architecture behavioral;
