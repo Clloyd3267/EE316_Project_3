@@ -33,7 +33,11 @@ signal lcd_pos : integer := 0;
 signal regData: t_lcd_display_data;
 signal busy_prev : std_logic;
 signal init_lcd : std_logic := '1';
-signal iData:   t_lcd_display_data;
+signal iData:   t_lcd_display_data := (
+					X"41",X"41",X"41",X"41",X"41",X"41",X"41",X"41",X"41",X"41",
+					X"41",X"41",X"41",X"41",X"41",X"41",X"41",X"41",X"41",X"41",
+					X"41",X"41",X"41",X"41",X"41",X"41",X"41",X"41",X"41",X"41",X"41",X"41"
+				  );
 component i2c_master is
 GENERIC(
     input_clk : INTEGER := 100_000_000; --input clock speed from user logic in Hz
@@ -54,6 +58,8 @@ END component i2c_master;
 
 component lut is 
 port(
+    I_CLK          : in std_logic ;
+    I_RESET_N      : in std_logic;   
     O_LCD_DATA     : out t_lcd_display_data
 );
 end component lut;
@@ -80,6 +86,8 @@ port map(
 	
 inst_lut : lut
 port map(
+    I_CLK => clk,
+    I_RESET_N => reset_n,
     O_LCD_DATA => iData
 );
 
