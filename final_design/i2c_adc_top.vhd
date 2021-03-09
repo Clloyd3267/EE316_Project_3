@@ -249,7 +249,7 @@ begin
     I_RESET_N      => s_reset_n,
     I_BUTTON       => I_BTN_0,
     O_BUTTON       => s_debounced_btn_0
-  )
+  );
 
   -- Device driver for BTN1 debounce module
   DEBOUNCE_BTN1_INST: debounce_button
@@ -263,7 +263,7 @@ begin
     I_RESET_N      => s_reset_n,
     I_BUTTON       => I_BTN_1,
     O_BUTTON       => s_debounced_btn_1
-  )
+  );
 
   -- Device driver for BTN0 edge trigger module
   EDGE_TRIG_BTN0_INST: edge_detector
@@ -278,7 +278,7 @@ begin
     I_RESET_N      => s_reset_n,
     I_SIGNAL       => s_debounced_btn_0,
     O_EDGE_SIGNAL  => s_edge_trig_btn_0
-  )
+  );
 
   -- Device driver for BTN1 edge trigger module
   EDGE_TRIG_BTN1_INST: edge_detector
@@ -293,7 +293,7 @@ begin
     I_RESET_N      => s_reset_n,
     I_SIGNAL       => s_debounced_btn_1,
     O_EDGE_SIGNAL  => s_edge_trig_btn_1
-  )
+  );
 
   ---------------
   -- Processes --
