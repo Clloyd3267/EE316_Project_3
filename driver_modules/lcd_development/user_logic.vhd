@@ -8,7 +8,10 @@ library work;
 entity usr_logic is
 port(	clk : 	 in std_logic;
 		--iData:   in t_lcd_display_data;
-
+        I_MODE         : in std_logic_vector(1 downto 0) := "00";
+  
+        -- Clock Generation En
+        CLK_GEN_EN	 : in std_logic := '1';
 		oSDA: 	 inout Std_logic;
 		oSCL:	 inout std_logic);
 
@@ -57,6 +60,8 @@ END component i2c_master;
 component lut is 
 port(
     I_CLK          : in std_logic ;
+    I_MODE         : in std_logic_vector(1 downto 0);
+    CLK_GEN_EN     : in std_logic;
     I_RESET_N      : in std_logic;   
     O_LCD_DATA     : out t_lcd_display_data
 );
@@ -85,6 +90,8 @@ port map(
 inst_lut : lut
 port map(
     I_CLK => clk,
+    I_MODE => I_MODE,
+    CLK_GEN_EN => CLK_GEN_EN,
     I_RESET_N => reset_n,
     O_LCD_DATA => iData
 );
@@ -212,9 +219,9 @@ if init_lcd = '0' then
 	case byteSel is
 	
 	   
-	    when 0 => data_wr <= iData(lcd_pos)(7 downto 4)&"1001";
-		when 1 => data_wr <= iData(lcd_pos)(7 downto 4)&"1101";
-		when 2 => data_wr <= iData(lcd_pos)(7 downto 4)&"1001";
+--	    when 0 => data_wr <= iData(lcd_pos)(7 downto 4)&"1001";
+--		when 1 => data_wr <= iData(lcd_pos)(7 downto 4)&"1101";
+--		when 2 => data_wr <= iData(lcd_pos)(7 downto 4)&"1001";
 		when 3 => data_wr <= iData(lcd_pos)(3 downto 0)&"1001";
 		when 4 => data_wr <= iData(lcd_pos)(3 downto 0)&"1101";
 		when 5 => data_wr <= iData(lcd_pos)(3 downto 0)&"1001";
@@ -253,15 +260,22 @@ end case;
 		
 else
 	case byteSel is
-		when 0 => 
-		data_wr <= "0011"&"1000";
-		when 1 => data_wr <= "0011"&"1100";
-		when 2 => data_wr <= "0011"&"1000";
+	    when 0 => data_wr <= X"0"&"1000";
+	    when 1 => data_wr <= X"0"&"1100";
+	    when 2 => data_wr <= X"0"&"1000";
+	    
+	    when 3 => data_wr <= X"1"&"1000";
+	    when 4 => data_wr <= X"1"&"1100";
+	    when 5 => data_wr <= X"1"&"1000";
+	    
+		when 6 => data_wr <= "0011"&"1000";
+		when 7 => data_wr <= "0011"&"1100";
+		when 8 => data_wr <= "0011"&"1000";
 --               i2c_ena <= '0';
 --               state <= pause;
-		when 3 => data_wr <= "0011"&"1000";
-		when 4 => data_wr <= "0011"&"1100";
-		when 5 => data_wr <= "0011"&"1000";
+		when 9 => data_wr <= "0011"&"1000";
+		when 10 => data_wr <= "0011"&"1100";
+		when 11 => data_wr <= "0011"&"1000";
 		  	--wait for 100us;
 --		if init_cont /= 0 then
 --		              init_cont <= init_cont - 1;
@@ -269,53 +283,53 @@ else
 --		              init_cont <= 624999;
 --		          end if
 --		          ;
-		when 6 => data_wr <= "0011"&"1000";
-		when 7 => data_wr <= "0011"&"1100";
-		when 8 => data_wr <= "0011"&"1000";
+		when 12 => data_wr <= "0011"&"1000";
+		when 13 => data_wr <= "0011"&"1100";
+		when 14 => data_wr <= "0011"&"1000";
 		--check not busy
-		when 9 => data_wr <= "0010"&"1000";
-		when 10 => data_wr <= "0010"&"1100";
-		when 11 => data_wr <= "0010"&"1000";
+		when 15 => data_wr <= "0010"&"1000";
+		when 16 => data_wr <= "0010"&"1100";
+		when 17 => data_wr <= "0010"&"1000";
 		
-		when 12 => data_wr <= "0010"&"1000";
-		when 13 => data_wr <= "0010"&"1100";
-		when 14 => data_wr <= "0010"&"1000";
+		when 18 => data_wr <= "0010"&"1000";
+		when 19 => data_wr <= "0010"&"1100";
+		when 20 => data_wr <= "0010"&"1000";
 		--check for not busy
-		when 15 => data_wr <= "1100"&"1000";
-		when 16 => data_wr <= "1100"&"1100";
-		when 17 => data_wr <= "1100"&"1000";
-		--check for not busy
-		when 18 => data_wr <= "0000"&"1000";
-		when 19 => data_wr <= "0000"&"1100";
-		when 20 => data_wr <= "0000"&"1000";
-		
-		when 21 => data_wr <= "1000"&"1000";
-		when 22 => data_wr <= "1000"&"1100";
-		when 23 => data_wr <= "1000"&"1000";
+		when 21 => data_wr <= "1100"&"1000";
+		when 22 => data_wr <= "1100"&"1100";
+		when 23 => data_wr <= "1100"&"1000";
 		--check for not busy
 		when 24 => data_wr <= "0000"&"1000";
 		when 25 => data_wr <= "0000"&"1100";
 		when 26 => data_wr <= "0000"&"1000";
 		
-		when 27 => data_wr <= "0001"&"1000";
-		when 28 => data_wr <= "0001"&"1100";
-		when 29 => data_wr <= "0001"&"1000";
+		when 27 => data_wr <= "1000"&"1000";
+		when 28 => data_wr <= "1000"&"1100";
+		when 29 => data_wr <= "1000"&"1000";
 		--check for not busy
 		when 30 => data_wr <= "0000"&"1000";
 		when 31 => data_wr <= "0000"&"1100";
 		when 32 => data_wr <= "0000"&"1000";
 		
-		when 33 => data_wr <= "0011"&"1000";
-		when 34 => data_wr <= "0011"&"1100";
-		when 35 => data_wr <= "0011"&"1000";
-		
+		when 33 => data_wr <= "0001"&"1000";
+		when 34 => data_wr <= "0001"&"1100";
+		when 35 => data_wr <= "0001"&"1000";
+		--check for not busy
 		when 36 => data_wr <= "0000"&"1000";
 		when 37 => data_wr <= "0000"&"1100";
 		when 38 => data_wr <= "0000"&"1000";
 		
-		when 39 => data_wr <= "1111"&"1000";
-		when 40 => data_wr <= "1111"&"1100";
-		when 41 => data_wr <= "1111"&"1000";
+		when 39 => data_wr <= "0011"&"1000";
+		when 40 => data_wr <= "0011"&"1100";
+		when 41 => data_wr <= "0011"&"1000";
+		
+		when 42 => data_wr <= "0000"&"1000";
+		when 43 => data_wr <= "0000"&"1100";
+		when 44 => data_wr <= "0000"&"1000";
+		
+		when 45 => data_wr <= "1111"&"1000";
+		when 46 => data_wr <= "1111"&"1100";
+		when 47 => data_wr <= "1111"&"1000";
 		--end of initialization
 		
 --		when 42 => data_wr <= "0100"&"1001";

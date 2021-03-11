@@ -1,50 +1,80 @@
--- Testbench for LCD 
+----------------------------------------------------------------------------------
+-- Company: 
+-- Engineer: 
+-- 
+-- Create Date: 03/10/2021 04:45:48 PM
+-- Design Name: 
+-- Module Name: lcd_test - Behavioral
+-- Project Name: 
+-- Target Devices: 
+-- Tool Versions: 
+-- Description: 
+-- 
+-- Dependencies: 
+-- 
+-- Revision:
+-- Revision 0.01 - File Created
+-- Additional Comments:
+-- 
+----------------------------------------------------------------------------------
+
+
 library IEEE;
-use IEEE.std_logic_1164.all;
- 
-entity lcd_tb is
-port(
-    clk :in std_logic
-);
-end lcd_tb; 
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
-architecture tb of lcd_tb is
+library work;
+  use work.lcd_screen_util.all;
 
+entity lcd_test is
+  Port (sys_clk : in std_logic;
+        mode_btn : in std_logic;
+        clk_gen_btn : in std_logic;
+        sda : inout std_logic;
+        scl : inout std_logic);
+end lcd_test;
 
-component lut is
-port
-(
-  I_CLK          : in std_logic;
-  I_RESET_N      : in std_logic;
-  I_MODE         : in std_logic_vector(1 downto 0);
-  CLK_GEN_EN	 : in std_logic);
-end component;
+architecture Behavioral of lcd_test is
 component usr_logic is
-port 
-(
-    oSDA : inout std_logic;
-    oSCL : inout std_logic
-);
-end component;
---signal  clk:  std_logic;
-signal  mode:  std_logic_vector(1 downto 0) := '0';
-signal  clk_gen_en:  std_logic := '1';
-signal sda : std_logic;
-signal scl : std_logic;
-signal reset: std_logic; 
+port(	clk : 	 in std_logic;
+        
+        -- Mode of operation
+        I_MODE         : in std_logic_vector(1 downto 0);
+  
+        -- Clock Generation En
+        CLK_GEN_EN	 : in std_logic;
+        
+		oSDA: 	 inout Std_logic;
+		oSCL:	 inout std_logic);
+end component usr_logic;
+
+signal clk_gen_en, clk_gen_btn_prev, mode_btn_prev : std_logic := '1';
+signal mode : std_logic_vector(1 downto 0) := "00";
+
 
 begin
 
-  -- Connect DUT
- -- DUT: fulladder2bit port map(a=>a, b=>b, cin=>cin, sum=>sum, carry=>carry);
-	DUT: lut port map(I_CLK => clk, I_RESET_N => reset, I_MODE => mode, CLK_GEN_EN => clk_gen_en);
-	DUT2: usr_logic port map(oSDA => sda, oSCL => scl);
-  process
-  begin
-    I_RESET_N = '1';
-    mode <= "00";
-	clk_gen_en <= '1';
-	wait for 10ns;
-    wait;
-  end process;
-end tb;
+LCD : usr_logic port map(clk => sys_clk, I_MODE => mode, CLK_GEN_EN => clk_gen_en, oSDA => sda, oSCL => scl);
+
+BTN_CLK_GEN : process(sys_clk)
+begin
+    if(rising_edge(sys_clk)) then
+        clk_gen_btn_prev <= clk_gen_btn;
+        if(clk_gen_btn_prev = '1' and clk_gen_btn = '0') then
+            clk_gen_en <= not clk_gen_en;
+        end if;
+    end if;
+end process BTN_CLK_GEN;
+
+BTN_MODE : process(sys_clk)
+begin
+    if(rising_edge(sys_clk)) then
+        mode_btn_prev <= mode_btn;
+        if(mode_btn_prev = '1' and mode_btn = '0') then
+            mode <= mode + '1';
+        end if;
+    end if;
+end process BTN_MODE;
+
+end Behavioral;
