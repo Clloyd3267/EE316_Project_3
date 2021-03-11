@@ -21,7 +21,7 @@ package lcd_screen_util is
 type t_lcd_display_data is array (31 downto 0) of std_logic_vector(7 downto 0);
 end package lcd_screen_util;
 
-  
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -34,18 +34,15 @@ library work;
 entity lut is
 generic
 (
-  C_CLK_FREQ_MHZ : integer := 50  -- System clock frequency in MHz
+  C_CLK_FREQ_MHZ : integer := 125  -- System clock frequency in MHz
 );
 port
 (
   I_CLK          : in std_logic;  -- System clk frequency of (C_CLK_FREQ_MHZ)
   I_RESET_N      : in std_logic := '1';  -- System reset (active low)
 
-  -- Mode of operation
-  I_MODE         : in std_logic_vector(1 downto 0) := "00";
-  
-  -- Clock Generation En
-  CLK_GEN_EN	 : in std_logic := '1';
+  I_IN_MODE     : in std_logic_vector(1 downto 0) := "00";
+  I_OUT_MODE    : in std_logic_vector(1 downto 0) := "00";
 
   -- Output LCD "screen" array type (see lcd_display_driver.vhd:19 for type def)
   O_LCD_DATA     : out t_lcd_display_data
@@ -61,19 +58,17 @@ architecture behavioral of lut is
   -- Constants --
   ---------------
 
-  -- Mode of Operation
-  -- 00: Initialization
-  -- 01: Test
-  -- 10: Pause
-  -- 11: PWM Generation
-  constant MODE_LDR : std_logic_vector(1 downto 0) := "00";
-  constant MODE_TEMP : std_logic_vector(1 downto 0) := "01";
-  constant MODE_ANALOG : std_logic_vector(1 downto 0) := "10";
-  constant MODE_POT   : std_logic_vector(1 downto 0) := "11";
-  
+  -- ADC channel number / Data inputs
+  constant C_ADC_LDR       : std_logic_vector(1 downto 0) := "00";  -- LDR
+  constant C_ADC_TMP       : std_logic_vector(1 downto 0) := "01";  -- TEMP
+  constant C_ADC_POT       : std_logic_vector(1 downto 0) := "11";  -- POT
+  constant C_ADC_ANA       : std_logic_vector(1 downto 0) := "10";  -- ANALOG IN
 
-
-
+  -- Data outputs
+  constant C_OUT_PWM       : std_logic_vector(1 downto 0) := "00";
+  constant C_OUT_CLK       : std_logic_vector(1 downto 0) := "01";
+  constant C_OUT_DAC       : std_logic_vector(1 downto 0) := "10";
+  constant C_OUT_DISABLED  : std_logic_vector(1 downto 0) := "11";
 
   -- Ascii constants for writing "Strings"
   -- Upper case alphabet
@@ -152,13 +147,9 @@ architecture behavioral of lut is
   -------------
   -- SIGNALS --
   -------------
---  type t_lcd_addr_ascii is array (1 downto 0) of std_logic_vector(7 downto 0);
---  type t_lcd_data_ascii is array (3 downto 0) of std_logic_vector(7 downto 0);
---  type t_lcd_freq_ascii is array (6 downto 0) of std_logic_vector(7 downto 0);
-
---  signal s_addr_ascii : t_lcd_addr_ascii := (others=>(others=>('0')));
---  signal s_data_ascii : t_lcd_data_ascii := (others=>(others=>('0')));
---  signal s_freq_ascii : t_lcd_freq_ascii := (others=>(others=>('0')));
+  type t_lcd_inout_ascii is array (2 downto 0) of std_logic_vector(7 downto 0);
+  signal s_input_mode : t_lcd_inout_ascii := (others=>(others=>('0')));
+  signal s_output_mode : t_lcd_inout_ascii := (others=>(others=>('0')));
 
 begin
 
@@ -171,103 +162,156 @@ begin
   ------------------------------------------------------------------------------
   LCD_LUT_DATA_LATCH: process (I_CLK, I_RESET_N)
   begin
-    if (I_RESET_N = '0') then
-      O_LCD_DATA     <= (others=>(others=>('0')));
+    -- if (I_RESET_N = '0') then
+    --   O_LCD_DATA     <= (others=>(others=>('0')));
 
-    elsif (rising_edge(I_CLK)) then
-      
-		case(CLK_GEN_EN) is 
-			when '0' =>
-				case(I_MODE) is -- CDL=> Fix Index/explain
-				when MODE_LDR  =>
-				  -- [PWM SRC: LDR]
-				  -- [  CLK DISABLED  ]
-				  O_LCD_DATA <=
-				  (
-					UP, UW, UM, SP, US, UR, UC, CL, SP, UL, UD, UR, SP, SP, SP, SP,
-					SP, SP, UC, UL, UK, SP, UD, UI, US, UA, UB, UL, UE, UD, SP, SP
-				  );
+    if (rising_edge(I_CLK)) then
+      -- [  INPUT : ___   ]
+      -- [ OUTPUT : ___   ]
+      -- O_LCD_DATA <=
+      -- (
+      --   SP, SP, UI, UN, UP, UU, UT, SP, CL, SP, s_input_mode(2),  s_input_mode(1),  s_input_mode(0), SP, SP, SP,
+      --   SP, UO, UU, UT, UP, UU, UT, SP, CL, SP, s_output_mode(2), s_output_mode(1), s_output_mode(0), SP, SP, SP
+      -- );
 
-				when MODE_TEMP  =>
-				  -- [PWM SRC: TEMP]
-				  -- [  CLK DISABLED  ]
-				  O_LCD_DATA <=
-				  (
-					UP, UW, UM, SP, US, UR, UC, CL, SP, UT, UE, UM, UP, SP, SP, SP,
-					SP, SP, UC, UL, UK, SP, UD, UI, US, UA, UB, UL, UE, UD, SP, SP
-				  );
+      -- O_LCD_DATA <=
+      -- (
+      --   SP, SP, UI, UN, UP, UU, UT, SP, CL, SP, UL, UD, UR, SP, SP, SP,
+      --   SP, UO, UU, UT, UP, UU, UT, SP, CL, SP, UD, UA, UC, SP, SP, SP
+      -- );
 
-				 when MODE_ANALOG =>
-				  -- [PWM SRC: ANALOG]
-				  -- [  CLK DISABLED  ]
-				  O_LCD_DATA <=
-				  (
-					UP, UM, UW, SP, US, UR, UC, CL, SP, UA, UN, UA, UL, UO, UG, SP,
-					SP, SP, UC, UL, UK, SP, UD, UI, US, UA, UB, UL, UE, UD, SP, SP
-				  );
+      -- if (I_IN_MODE = C_ADC_LDR) then
+      --   O_LCD_DATA <=
+      --   (
+      --     SP, UO, UU, UT, UP, UU, UT, SP, CL, SP, UD, UA, UC, SP, SP, SP,
+      --     SP, SP, UI, UN, UP, UU, UT, SP, CL, SP, UL, UD, UR, SP, SP, SP
+      --   );
+      -- else
+      --   O_LCD_DATA <=
+      --   (
+      --     SP, UO, UU, UT, UP, UU, UT, SP, CL, SP, UD, UA, UC, SP, SP, SP,
+      --     SP, SP, UI, UN, UP, UU, UT, SP, CL, SP, UP, UO, UT, SP, SP, SP
+      --   );
+      -- end if;
+      if    (I_IN_MODE = C_ADC_LDR) then
+        if    (I_OUT_MODE = C_OUT_PWM) then
+          O_LCD_DATA <=
+          (
+            SP, UO, UU, UT, UP, UU, UT, SP, CL, SP, UP, UW, UM, SP, SP, SP,
+            SP, SP, UI, UN, UP, UU, UT, SP, CL, SP, UL, UD, UR, SP, SP, SP
+          );
+        elsif (I_OUT_MODE = C_OUT_CLK) then
+          O_LCD_DATA <=
+          (
+            SP, UO, UU, UT, UP, UU, UT, SP, CL, SP, UC, UL, UK, SP, SP, SP,
+            SP, SP, UI, UN, UP, UU, UT, SP, CL, SP, UL, UD, UR, SP, SP, SP
+          );
+        elsif (I_OUT_MODE = C_OUT_DAC) then
+          O_LCD_DATA <=
+          (
+            SP, UO, UU, UT, UP, UU, UT, SP, CL, SP, UD, UA, UC, SP, SP, SP,
+            SP, SP, UI, UN, UP, UU, UT, SP, CL, SP, UL, UD, UR, SP, SP, SP
+          );
+        else -- C_OUT_DISABLED
+          O_LCD_DATA <=
+          (
+            SP, UO, UU, UT, UP, UU, UT, SP, CL, SP, UO, UF, UF, SP, SP, SP,
+            SP, SP, UI, UN, UP, UU, UT, SP, CL, SP, UL, UD, UR, SP, SP, SP
+          );
+        end if;
+      elsif (I_IN_MODE = C_ADC_TMP) then
+        if    (I_OUT_MODE = C_OUT_PWM) then
+          O_LCD_DATA <=
+          (
+            SP, UO, UU, UT, UP, UU, UT, SP, CL, SP, UP, UW, UM, SP, SP, SP,
+            SP, SP, UI, UN, UP, UU, UT, SP, CL, SP, UT, UM, UP, SP, SP, SP
+          );
+        elsif (I_OUT_MODE = C_OUT_CLK) then
+          O_LCD_DATA <=
+          (
+            SP, UO, UU, UT, UP, UU, UT, SP, CL, SP, UC, UL, UK, SP, SP, SP,
+            SP, SP, UI, UN, UP, UU, UT, SP, CL, SP, UT, UM, UP, SP, SP, SP
+          );
+        elsif (I_OUT_MODE = C_OUT_DAC) then
+          O_LCD_DATA <=
+          (
+            SP, UO, UU, UT, UP, UU, UT, SP, CL, SP, UD, UA, UC, SP, SP, SP,
+            SP, SP, UI, UN, UP, UU, UT, SP, CL, SP, UT, UM, UP, SP, SP, SP
+          );
+        else -- C_OUT_DISABLED
+          O_LCD_DATA <=
+          (
+            SP, UO, UU, UT, UP, UU, UT, SP, CL, SP, UO, UF, UF, SP, SP, SP,
+            SP, SP, UI, UN, UP, UU, UT, SP, CL, SP, UT, UM, UP, SP, SP, SP
+          );
+        end if;
 
-				when MODE_POT   =>
-				  -- [PWM SRC: POT]
-				  -- [  CLK DISABLED  ]
-				  O_LCD_DATA <=
-				  (
-					UP, UW, UM, SP, US, UR, UC, CL, SP, UP, UO, UT, SP, SP, SP, SP,
-					SP, SP, UC, UL, UK, SP, UD, UI, US, UA, UB, UL, UE, UD, SP, SP
-				  );
+      elsif (I_IN_MODE = C_ADC_ANA) then
+        if    (I_OUT_MODE = C_OUT_PWM) then
+          O_LCD_DATA <=
+          (
+            SP, UO, UU, UT, UP, UU, UT, SP, CL, SP, UP, UW, UM, SP, SP, SP,
+            SP, SP, UI, UN, UP, UU, UT, SP, CL, SP, UA, UN, UA, SP, SP, SP
+          );
+        elsif (I_OUT_MODE = C_OUT_CLK) then
+          O_LCD_DATA <=
+          (
+            SP, UO, UU, UT, UP, UU, UT, SP, CL, SP, UC, UL, UK, SP, SP, SP,
+            SP, SP, UI, UN, UP, UU, UT, SP, CL, SP, UA, UN, UA, SP, SP, SP
+          );
+        elsif (I_OUT_MODE = C_OUT_DAC) then
+          O_LCD_DATA <=
+          (
+            SP, UO, UU, UT, UP, UU, UT, SP, CL, SP, UD, UA, UC, SP, SP, SP,
+            SP, SP, UI, UN, UP, UU, UT, SP, CL, SP, UA, UN, UA, SP, SP, SP
+          );
+        else -- C_OUT_DISABLED
+          O_LCD_DATA <=
+          (
+            SP, UO, UU, UT, UP, UU, UT, SP, CL, SP, UO, UF, UF, SP, SP, SP,
+            SP, SP, UI, UN, UP, UU, UT, SP, CL, SP, UA, UN, UA, SP, SP, SP
+          );
+        end if;
 
-				when others =>
-				  O_LCD_DATA <= (others=>(others=>('0')));
-				  
-				end case;  
-			when '1' =>
-				case(I_MODE) is -- CDL=> Fix Index/explain
-				when MODE_LDR  =>
-				  -- [PWM SRC: LDR]
-				  -- [CLK ENABLED]
-				  O_LCD_DATA <=
-				  (
-					UP, UW, UM, SP, US, UR, UC, CL, SP, UL, UD, UR, SP, SP, SP, SP,
-					UC, UL, UK, SP, UE, UN, UA, UB, UL, UE, UD, SP, SP, SP, SP, SP
-				  );
-
-				when MODE_TEMP  =>
-				  -- [PWM SRC: TEMP]
-				  -- [CLK ENABLED]
-				  O_LCD_DATA <=
-				  (
-					UP, UW, UM, SP, US, UR, UC, CL, SP, UT, UE, UM, UP, SP, SP, SP,
-					UC, UL, UK, SP, UE, UN, UA, UB, UL, UE, UD, SP, SP, SP, SP, SP
-				  );
-
-				 when MODE_ANALOG =>
-				  -- [PWM SRC: ANALOG]
-				  -- [CLK ENABLED]
-				  O_LCD_DATA <=
-				  (
-					UP, UM, UW, SP, US, UR, UC, CL, SP, UA, UN, UA, UL, UO, UG, SP,
-					UC, UL, UK, SP, UE, UN, UA, UB, UL, UE, UD, SP, SP, SP, SP, SP
-				  );
-
-				when MODE_POT   =>
-				  -- [PWM SRC: POT]
-				  -- [CLK ENABLED]
-				  O_LCD_DATA <=
-				  (
-					UP, UW, UM, SP, US, UR, UC, CL, SP, UP, UO, UT, SP, SP, SP, SP,
-					UC, UL, UK, SP, UE, UN, UA, UB, UL, UE, UD, SP, SP, SP, SP, SP
-				  );
-
-				when others =>
-				  O_LCD_DATA <= (others=>(others=>('0')));
-				  
-				end case;  
-				
-				when others =>
-				     O_LCD_DATA <= (others=>(others=>('0')));
-      end case;
+      else -- C_ADC_POT
+        if    (I_OUT_MODE = C_OUT_PWM) then
+          O_LCD_DATA <=
+          (
+            SP, UO, UU, UT, UP, UU, UT, SP, CL, SP, UP, UW, UM, SP, SP, SP,
+            SP, SP, UI, UN, UP, UU, UT, SP, CL, SP, UP, UO, UT, SP, SP, SP
+          );
+        elsif (I_OUT_MODE = C_OUT_CLK) then
+          O_LCD_DATA <=
+          (
+            SP, UO, UU, UT, UP, UU, UT, SP, CL, SP, UC, UL, UK, SP, SP, SP,
+            SP, SP, UI, UN, UP, UU, UT, SP, CL, SP, UP, UO, UT, SP, SP, SP
+          );
+        elsif (I_OUT_MODE = C_OUT_DAC) then
+          O_LCD_DATA <=
+          (
+            SP, UO, UU, UT, UP, UU, UT, SP, CL, SP, UD, UA, UC, SP, SP, SP,
+            SP, SP, UI, UN, UP, UU, UT, SP, CL, SP, UP, UO, UT, SP, SP, SP
+          );
+        else -- C_OUT_DISABLED
+          O_LCD_DATA <=
+          (
+            SP, UO, UU, UT, UP, UU, UT, SP, CL, SP, UO, UF, UF, SP, SP, SP,
+            SP, SP, UI, UN, UP, UU, UT, SP, CL, SP, UP, UO, UT, SP, SP, SP
+          );
+        end if;
+      end if;
     end if;
   end process LCD_LUT_DATA_LATCH;
   ------------------------------------------------------------------------------
 
+  -- s_input_mode <= (UL, UD, UR) when I_IN_MODE = C_ADC_LDR
+  --            else (UT, UM, UP) when I_IN_MODE = C_ADC_TMP
+  --            else (UP, UO, UT) when I_IN_MODE = C_ADC_POT
+  --            else (UA, UN, UA) when I_IN_MODE = C_ADC_ANA;
+
+  -- s_output_mode <= (UP, UW, UM) when I_OUT_MODE = C_OUT_PWM
+  --             else (UC, UL, UK) when I_OUT_MODE = C_OUT_CLK
+  --             else (UD, UA, UC) when I_OUT_MODE = C_OUT_DAC
+  --             else (UO, UF, UF) when I_OUT_MODE = C_OUT_DISABLED;
 
 end architecture behavioral;

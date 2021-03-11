@@ -42,8 +42,13 @@ port
   O_PULSE_WAVE        : out std_logic;    -- Clock pulse from waveform gen
   O_PWM_WAVE          : out std_logic;    -- PWM pulse from pwm gen
 
-  IO_I2C_SDA          : inout std_logic;  -- Serial data of i2c bus
-  IO_I2C_SCL          : inout std_logic   -- Serial clock of i2c bus
+  -- ADC I2C interface
+  IO_I2C_ADC_SDA          : inout std_logic;  -- Serial data of i2c bus
+  IO_I2C_ADC_SCL          : inout std_logic;   -- Serial clock of i2c bus
+
+  -- LCD I2C interface
+  IO_I2C_LCD_SDA          : inout std_logic;  -- Serial data of i2c bus
+  IO_I2C_LCD_SCL          : inout std_logic   -- Serial clock of i2c bus
 );
 end entity i2c_adc_top;
 
@@ -101,7 +106,19 @@ architecture behavioral of i2c_adc_top is
   );
   end component pwm_driver;
 
-  --CDL=> Add LCD components
+  component usr_logic is
+  port
+  (
+    clk : in std_logic;
+
+    I_IN_MODE     : in std_logic_vector(1 downto 0);
+    I_OUT_MODE    : in std_logic_vector(1 downto 0);
+
+    oSDA       : inout std_logic;
+    oSCL       : inout std_logic
+  );
+  end component usr_logic;
+
   --CDL=> Add DAC components (may be included in ADC module)
 
   component debounce_button is
@@ -205,8 +222,8 @@ begin
     I_ADC_CH_NUM   => s_adc_ch_num,
     O_ADC_DATA     => s_adc_data,
 
-    IO_I2C_SDA     => IO_I2C_SDA,
-    IO_I2C_SCL     => IO_I2C_SCL
+    IO_I2C_SDA     => IO_I2C_ADC_SDA,
+    IO_I2C_SCL     => IO_I2C_ADC_SCL
   );
 
   -- Device driver for clock pulse generator
@@ -234,7 +251,17 @@ begin
     O_PWM          => O_PWM_WAVE
   );
 
-  --CDL=> Add LCD component instantions
+  -- Device driver for LCD display
+  LCD_DRIVER_INST: usr_logic
+  port map
+  (
+    clk        => I_CLK_125_MHZ,
+    I_IN_MODE  => s_adc_ch_num,
+    I_OUT_MODE => s_output_mode,
+    oSDA       => IO_I2C_LCD_SDA,
+    oSCL       => IO_I2C_LCD_SCL
+  );
+
   --CDL=> Add DAC component instantions (may be included in ADC module)
 
   -- Device driver for BTN0 debounce module
@@ -335,7 +362,7 @@ begin
   begin
     if (s_reset_n = '0') then
       s_adc_ch_num        <= C_ADC_CH_3;  -- Default values for input mode
-      s_output_mode       <= C_OUT_CLK;   -- Default values for output mode
+      s_output_mode       <= C_OUT_DISABLED;   -- Default values for output mode
 
     elsif (rising_edge(I_CLK_125_MHZ)) then
 
